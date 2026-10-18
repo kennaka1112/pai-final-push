@@ -1,0 +1,8 @@
+#!/bin/bash
+# ACT方策の学習（押しタスク, GPU）
+set -e
+CFG=/workspace/pai_push/configs
+cp "$CFG/push_features.py" ~/pai_training/configs/push_features.py
+cp "$CFG/push_train.yaml" ~/pai_training/configs/train_config.yaml
+cd ~/pai_training
+exec pixi run train "$@"

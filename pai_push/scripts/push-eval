@@ -1,0 +1,9 @@
+#!/bin/bash
+# 学習済み方策のオフライン評価（データセット上での予測と正解の比較）
+CFG=/workspace/pai_push/configs
+cp "$CFG/push_features.py" ~/pai_training/configs/push_features.py
+cd ~/pai_training && exec pixi run debug-policy \
+  --dataset-root "$HOME/dataset/lerobot_dataset/crane_plus_push" \
+  --repo-id crane_plus_push \
+  --policy-path "$HOME/checkpoints/train/crane_plus_push_act" \
+  --episode-index "${1:-0}"

@@ -1,0 +1,3 @@
+#!/bin/bash
+# Gazebo上に CRANE+ V2 と机を表示する（第4・5回）
+exec ros2 launch crane_plus_gazebo crane_plus_with_table.launch.py "$@"

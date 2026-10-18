@@ -1,0 +1,6 @@
+#!/bin/bash
+# 変換したデータセットを rerun で可視化。表示されたURLをホストPCのブラウザで開く
+#   使い方: pai-viz [エピソード番号=0]
+cd ~/pai_training && exec pixi run python scripts/visualize_dataset.py \
+  --root "$HOME/dataset/lerobot_dataset/crane_plus_pekori" --repo-id crane_plus_pekori \
+  --episode-index "${1:-0}" --mode distant

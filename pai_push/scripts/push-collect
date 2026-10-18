@@ -1,0 +1,7 @@
+#!/bin/bash
+# 押しタスクのデモを自動生成して rosbag に記録する
+#   使い方: push-collect [-n 20]
+source /opt/ros/humble/setup.bash
+source ~/airobot_ws/install/setup.bash
+export DISPLAY=:0
+exec python3 /workspace/pai_push/scripts/auto_demo_push.py "$@"

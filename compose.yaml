@@ -1,0 +1,27 @@
+services:
+  sim:
+    build: .
+    image: pai-final-push:local
+    container_name: pai_push
+    ports:
+      - "${VNC_PORT:-6080}:80"   # noVNC（ブラウザでデスクトップ）: http://localhost:6080
+    shm_size: "4gb"
+    environment:
+      - RESOLUTION=${RESOLUTION:-1920x1080}
+      - WANDB_MODE=${WANDB_MODE:-offline}
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    volumes:
+      - pai_dataset:/home/ubuntu/dataset         # rosbag と LeRobotDataset
+      - pai_checkpoints:/home/ubuntu/checkpoints # 学習済みモデル
+      - .:/workspace                             # このリポジトリ
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  pai_dataset:
+  pai_checkpoints:

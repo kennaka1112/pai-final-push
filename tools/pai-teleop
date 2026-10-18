@@ -1,0 +1,3 @@
+#!/bin/bash
+# キーボードで CRANE+ V2 を関節空間テレオペ（Q/E:関節選択 W/S:増減 X:直立 ESC:終了）
+exec ros2 run physicalai_teleop teleop_keyboard "$@"

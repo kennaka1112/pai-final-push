@@ -1,0 +1,11 @@
+﻿trial 1: block=(+0.1295,+0.0664)  goal_dist=1.17 cm  OK
+trial 2: block=(+0.1276,+0.0755)  goal_dist=2.08 cm  OK
+trial 3: block=(+0.1335,+0.0729)  goal_dist=1.88 cm  OK
+trial 4: block=(+0.1490,+0.0675)  goal_dist=2.39 cm  OK
+trial 5: block=(+0.1339,+0.0796)  goal_dist=2.54 cm  OK
+trial 6: block=(+0.1478,+0.0664)  goal_dist=2.23 cm  OK
+trial 7: block=(+0.1507,+0.0676)  goal_dist=2.53 cm  OK
+trial 8: block=(+0.1391,+0.0798)  goal_dist=2.71 cm  OK
+trial 9: block=(+0.1302,+0.0722)  goal_dist=1.75 cm  OK
+trial 10: block=(+0.1476,+0.0661)  goal_dist=2.19 cm  OK
+成功 10/10   平均誤差 2.15 cm

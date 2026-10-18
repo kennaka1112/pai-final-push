@@ -1,0 +1,18 @@
+#!/bin/bash
+# 1エピソード分のrosbagを記録する（Ctrl+Cで停止）
+#   使い方: pai-record [エピソード名] [タスク名=pekori]
+#   保存先: ~/dataset/rosbags/<タスク名>/<エピソード名>
+set -e
+TASK="${2:-pekori}"
+DIR="$HOME/dataset/rosbags/$TASK"
+mkdir -p "$DIR"
+if [ -n "$1" ]; then
+  NAME="$1"
+else
+  n=1; while [ -e "$DIR/ep$n" ]; do n=$((n+1)); done; NAME="ep$n"
+fi
+echo "記録先: $DIR/$NAME   (Ctrl+C で記録停止)"
+exec ros2 bag record -o "$DIR/$NAME" \
+  /joint_states \
+  /crane_plus_arm_controller/joint_trajectory \
+  /crane_plus_gripper_controller/joint_trajectory

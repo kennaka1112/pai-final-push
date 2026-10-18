@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""お辞儀（pekori）デモを自動生成して rosbag に記録する。
+
+キーボードテレオペ（pai-teleop + pai-record）でのデータ収集を、スクリプトで代行する。
+teleop_keyboard と同じトピック・同じ20Hzで関節指令を出すので、変換・学習の流れは手動収集と同じ。
+エピソードごとにお辞儀の深さ・速さを少しずつ変え、データに多様性を持たせる。
+
+  使い方: pai-auto-demo [-n エピソード数] [--task pekori] [--seed 0]
+  前提  : 別ターミナルで pai-gazebo が起動していること
+"""
+import argparse
+import math
+import os
+import random
+import signal
+import subprocess
+import time
+
+import rclpy
+from rclpy.node import Node
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+
+# physicalai_teleop/teleop_keyboard.py と同じ定義
+ARM_JOINT_NAMES = ['crane_plus_joint1', 'crane_plus_joint2', 'crane_plus_joint4', 'crane_plus_joint3']
+GRIPPER_JOINT_NAME = 'crane_plus_joint_hand'
+GRIPPER_OPEN = -0.5236
+RATE_HZ = 20.0
+TOPICS = ['/joint_states',
+          '/crane_plus_arm_controller/joint_trajectory',
+          '/crane_plus_gripper_controller/joint_trajectory']
+
+
+def smoothstep(x):
+    x = min(max(x, 0.0), 1.0)
+    return 0.5 - 0.5 * math.cos(math.pi * x)
+
+
+def pekori_profile(rng):
+    """1エピソード分の [(t, arm_pos)] を作る。arm_pos は ARM_JOINT_NAMES 順。"""
+    depth = rng.uniform(0.6, 1.0)          # 肩(joint2)を倒す量 [rad]
+    elbow = rng.uniform(0.2, 0.5)          # 肘(joint3)も少し曲げる
+    t_hold0 = rng.uniform(0.8, 1.2)        # 直立で待つ
+    t_down = rng.uniform(1.5, 2.5)         # お辞儀に要する時間
+    t_hold1 = rng.uniform(0.4, 0.8)        # 頭を下げたまま
+    t_up = rng.uniform(1.5, 2.5)           # 戻る
+    t_hold2 = 1.0
+    total = t_hold0 + t_down + t_hold1 + t_up + t_hold2
+    steps = int(total * RATE_HZ)
+    out = []
+    for i in range(steps + 1):
+        t = i / RATE_HZ
+        if t < t_hold0:
+            a = 0.0
+        elif t < t_hold0 + t_down:
+            a = smoothstep((t - t_hold0) / t_down)
+        elif t < t_hold0 + t_down + t_hold1:
+            a = 1.0
+        elif t < t_hold0 + t_down + t_hold1 + t_up:
+            a = 1.0 - smoothstep((t - t_hold0 - t_down - t_hold1) / t_up)
+        else:
+            a = 0.0
+        # 並び: joint1, joint2, joint4, joint3
+        out.append([0.0, depth * a, 0.0, elbow * a])
+    return out
+
+
+class DemoPublisher(Node):
+    def __init__(self):
+        super().__init__('pai_auto_demo')
+        self.arm_pub = self.create_publisher(
+            JointTrajectory, '/crane_plus_arm_controller/joint_trajectory', 10)
+        self.gripper_pub = self.create_publisher(
+            JointTrajectory, '/crane_plus_gripper_controller/joint_trajectory', 10)
+
+    def send(self, arm_pos, gripper_pos=GRIPPER_OPEN):
+        for pub, names, pos in ((self.arm_pub, ARM_JOINT_NAMES, arm_pos),
+                                (self.gripper_pub, [GRIPPER_JOINT_NAME], [gripper_pos])):
+            jt = JointTrajectory()
+            jt.joint_names = names
+            pt = JointTrajectoryPoint()
+            pt.positions = [float(p) for p in pos]
+            pt.time_from_start.nanosec = int(0.1 * 1e9)
+            jt.points.append(pt)
+            pub.publish(jt)
+
+    def hold(self, arm_pos, seconds):
+        end = time.monotonic() + seconds
+        while time.monotonic() < end:
+            self.send(arm_pos)
+            time.sleep(1.0 / RATE_HZ)
+
+
+def next_episode_dir(base):
+    n = 1
+    while os.path.exists(os.path.join(base, f'ep{n}')):
+        n += 1
+    return os.path.join(base, f'ep{n}')
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('-n', '--episodes', type=int, default=15)
+    ap.add_argument('--task', default='pekori')
+    ap.add_argument('--seed', type=int, default=0)
+    args = ap.parse_args()
+
+    rng = random.Random(args.seed)
+    base = os.path.expanduser(f'~/dataset/rosbags/{args.task}')
+    os.makedirs(base, exist_ok=True)
+
+    rclpy.init()
+    node = DemoPublisher()
+    try:
+        for ep in range(args.episodes):
+            # 直立姿勢にリセットしてから記録開始
+            node.hold([0.0] * 4, 2.0)
+            out_dir = next_episode_dir(base)
+            rec = subprocess.Popen(['ros2', 'bag', 'record', '-o', out_dir, *TOPICS],
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            time.sleep(1.5)  # recorder の購読開始待ち
+            for pos in pekori_profile(rng):
+                node.send(pos)
+                time.sleep(1.0 / RATE_HZ)
+            rec.send_signal(signal.SIGINT)
+            rec.wait(timeout=15)
+            print(f'[{ep + 1}/{args.episodes}] saved: {out_dir}', flush=True)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

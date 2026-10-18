@@ -1,0 +1,22 @@
+# ACT の学習設定（押しタスク）
+#   講義デフォルト(200step/batch2)では押し動作の長い軌道を覚えきれないため、
+#   RTX 3060 で数十分に収まる範囲で step 数と batch を増やしている。
+dataset_root: "/home/ubuntu/dataset/lerobot_dataset/crane_plus_push"
+repo_id: "crane_plus_push"
+output_directory: "/home/ubuntu/checkpoints/train/crane_plus_push_act"
+config_path: "configs/push_features.py"
+
+device: "cuda"
+training_steps: 6000
+log_freq: 100
+num_workers: 2
+batch_size: 16
+chunk_size: 32
+n_action_steps: 8
+learning_rate: 0.0001
+delta_timestamps:
+  observation.environment_state: [0.0]
+  observation.state: [0.0]
+  action: [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55,
+           0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15,
+           1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5, 1.55]

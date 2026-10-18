@@ -1,0 +1,3 @@
+#!/bin/bash
+# ACT方策の学習（設定: ~/pai_training/configs/train_config.yaml）
+cd ~/pai_training && exec pixi run train "$@"

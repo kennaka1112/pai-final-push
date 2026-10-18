@@ -1,0 +1,6 @@
+#!/bin/bash
+# 学習済み方策をGazeboにデプロイ（先に pai-gazebo を起動しておく）
+#   使い方: pai-infer [モデルのパス]
+source /opt/ros/humble/setup.bash
+MODEL="${1:-$HOME/checkpoints/train/crane_plus_pekori_act}"
+cd ~/pai_training && exec pixi run infer --model-path "$MODEL"

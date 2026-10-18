@@ -1,0 +1,11 @@
+#!/bin/bash
+# rosbag2 -> LeRobotDataset 変換（押しタスク）
+#   pai_training 側は configs/conversion_config.yaml を固定で読むため、
+#   本課題用の設定をその名前で配置してから実行する。
+set -e
+CFG=/workspace/pai_push/configs
+cp "$CFG/push_features.py" ~/pai_training/configs/push_features.py
+cp "$CFG/push_conversion.yaml" ~/pai_training/configs/conversion_config.yaml
+cd ~/pai_training
+# 既存データセットがある場合は上書き
+yes y | pixi run convert "$@"

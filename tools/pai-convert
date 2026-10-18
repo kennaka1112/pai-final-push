@@ -1,0 +1,3 @@
+#!/bin/bash
+# rosbag -> LeRobotDataset 変換（設定: ~/pai_training/configs/conversion_config.yaml）
+cd ~/pai_training && exec pixi run convert "$@"

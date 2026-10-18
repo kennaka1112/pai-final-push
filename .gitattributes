@@ -1,0 +1,4 @@
+# コンテナ(Linux)内で実行するファイルは常にLFで取り出す
+* text=auto eol=lf
+*.png binary
+*.mp4 binary

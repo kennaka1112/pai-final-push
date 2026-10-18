@@ -1,0 +1,6 @@
+#!/bin/bash
+# 学習済み方策をデータセット上でオフライン評価
+#   使い方: pai-debug-policy [エピソード番号=0]
+cd ~/pai_training && exec pixi run debug-policy \
+  --dataset-root "$HOME/dataset/lerobot_dataset/crane_plus_pekori" --repo-id crane_plus_pekori \
+  --policy-path "$HOME/checkpoints/train/crane_plus_pekori_act" --episode-index "${1:-0}"
